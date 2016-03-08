@@ -1,2 +1,1 @@
-# activeMQ
 activeMQ hello world
