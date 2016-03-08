@@ -1,26 +1,35 @@
-package activeMQ;
+package queue;
 
-import javax.jms.*;
+import java.io.Serializable;
+
+import javax.jms.Connection;
+import javax.jms.Destination;
+import javax.jms.JMSException;
+import javax.jms.Message;
+import javax.jms.MessageConsumer;
+import javax.jms.ObjectMessage;
+import javax.jms.Session;
+import javax.jms.TextMessage;
 
 import org.apache.activemq.ActiveMQConnection;
 import org.apache.activemq.ActiveMQConnectionFactory;
 import org.apache.log4j.BasicConfigurator;
 
-public class Consumer {
+public class QueueConsumer {
 	// URL of the JMS server
-	private static String url = ActiveMQConnection.DEFAULT_BROKER_URL;
+	private static final String url = ActiveMQConnection.DEFAULT_BROKER_URL;
 
 	// Name of the queue we will receive messages from
-	private static String subject = "MyQueue";
+	private static final String subject = "MyQueue";
 
 	public static void main(String[] args) throws JMSException {
 		BasicConfigurator.configure();
 		// Getting JMS connection from the server
-		ConnectionFactory connectionFactory = new ActiveMQConnectionFactory(url);
+		ActiveMQConnectionFactory connectionFactory = new ActiveMQConnectionFactory(url);
+		connectionFactory.setTrustAllPackages(true);
 		Connection connection = connectionFactory.createConnection();
 		connection.start();
 
-		// Creating session for seding messages
 		Session session = connection.createSession(false, Session.AUTO_ACKNOWLEDGE);
 
 		// Getting the queue
@@ -32,6 +41,7 @@ public class Consumer {
 		// Here we receive the message.
 		// By default this call is blocking, which means it will wait
 		// for a message to arrive on the queue.
+		System.out.println("Waiting for a message...");
 		Message message = consumer.receive();
 
 		// There are many types of Message and TextMessage
@@ -41,6 +51,9 @@ public class Consumer {
 		if (message instanceof TextMessage) {
 			TextMessage textMessage = (TextMessage) message;
 			System.out.println("Received message: " + textMessage.getText());
+		} else if (message instanceof ObjectMessage) {
+			Serializable myMessage = ((ObjectMessage) message).getObject();
+			System.out.println("Received message: " + myMessage);
 		}
 		connection.close();
 	}
